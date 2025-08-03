@@ -15,7 +15,8 @@ public class LoggingAspect {
 
     private static final Logger logger = LogManager.getLogger(LoggingAspect.class);
 
-    @Around("execution(* br.mf.demospringsecurity..*(..))")
+    @Around("execution(* br.mf.demospringsecurity.controller..*(..)) || " +
+            "execution(* br.mf.demospringsecurity.service..*(..))  ")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().toShortString();
         logger.info("Entering {}", methodName);
