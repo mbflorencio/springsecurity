@@ -84,10 +84,7 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <!-- Needed for password encoding utilities -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
+
     </dependencies>
     <build>
         <plugins>

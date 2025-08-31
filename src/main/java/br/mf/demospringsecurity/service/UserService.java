@@ -3,7 +3,7 @@ package br.mf.demospringsecurity.service;
 import br.mf.demospringsecurity.model.User;
 import br.mf.demospringsecurity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,16 +13,16 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository repository;
-    private final PasswordEncoder passwordEncoder;
+
 
     @Autowired
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository repository) {
         this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
+
     }
 
     public User save(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(user.getPassword());
         return repository.save(user);
     }
 
@@ -42,7 +42,7 @@ public class UserService {
         Optional<User> userOpt = repository.findByLogin(login);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+            if (rawPassword.equals( user.getPassword())) {
                 return Optional.of(user);
             }
         }

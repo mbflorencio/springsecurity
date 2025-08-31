@@ -3,6 +3,7 @@ package br.mf.demospringsecurity.controller;
 import br.mf.demospringsecurity.dto.RequestDTO;
 import br.mf.demospringsecurity.mapper.RequestMapper;
 import br.mf.demospringsecurity.model.Request;
+import br.mf.demospringsecurity.model.RequestProduct;
 import br.mf.demospringsecurity.service.RequestService;
 import br.mf.demospringsecurity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,10 +54,16 @@ public class RequestController {
     @PostMapping
     public ResponseEntity<RequestDTO> create(@RequestBody RequestDTO dto) {
         Request entity = mapper.toEntity(dto);
+        List<RequestProduct> itens = entity.getItems();
         if (dto.getUserId() != null) {
             userService.findById(dto.getUserId()).ifPresent(entity::setUser);
         }
+
         Request saved = service.save(entity);
+        Request teste = new Request();
+        teste.setId(saved.getId());
+        itens.forEach(item -> item.setRequest(teste));
+        saved.setItems( service.saveItens(itens));
         return ResponseEntity.created(URI.create("/requests/" + saved.getId()))
                 .body(mapper.toDto(saved));
     }
