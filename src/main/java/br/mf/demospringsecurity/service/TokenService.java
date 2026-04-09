@@ -1,44 +1,47 @@
 package br.mf.demospringsecurity.service;
 
 import br.mf.demospringsecurity.model.User;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.security.Key;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.Base64;
+import java.time.ZoneId;
+import java.util.Date;
 
+/**
+ * Token expira em 6 h para equilibrar segurança e usabilidade.
+ */
 @Service
 public class TokenService {
 
-    private static final String SECRET = "0123456789abcdef0123456789abcdef"; // 32 bytes -> 256 bit key
-    private static final String ALGORITHM = "AES/GCM/NoPadding";
+    private static final String CLAIM_PROFILE = "profile";
 
-    private SecretKey getKey() {
-        return new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), "AES");
+    private final Key key;
+    private final long expiration;
+
+    @Autowired
+    public TokenService(@Value("${jwt.secret}") String secret,
+                        @Value("${jwt.expiration:21600000}") long expiration) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expiration = expiration;
     }
 
+
+
     public String generateToken(User user) {
-        String payload = user.getProfile() + ":" + LocalDateTime.now();
-        byte[] iv = new byte[12];
-        new SecureRandom().nextBytes(iv);
-        try {
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, getKey(), new GCMParameterSpec(128, iv));
-            byte[] encrypted = cipher.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-            ByteBuffer buffer = ByteBuffer.allocate(iv.length + encrypted.length);
-            buffer.put(iv);
-            buffer.put(encrypted);
-            return Base64.getEncoder().encodeToString(buffer.array());
-        } catch (Exception e) {
-            throw new RuntimeException("Could not generate token", e);
-        }
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .setSubject(user.getLogin())
+                .claim(CLAIM_PROFILE, user.getProfile())
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + expiration))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public TokenValidationResult validateToken(String token) {
@@ -46,29 +49,16 @@ public class TokenService {
             return new TokenValidationResult(false, null, null);
         }
         try {
-            byte[] decoded = Base64.getDecoder().decode(token);
-            if (decoded.length < 12) {
-                return new TokenValidationResult(false, null, null);
-            }
-            ByteBuffer buffer = ByteBuffer.wrap(decoded);
-            byte[] iv = new byte[12];
-            buffer.get(iv);
-            byte[] cipherText = new byte[buffer.remaining()];
-            buffer.get(cipherText);
-
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, getKey(), new GCMParameterSpec(128, iv));
-            byte[] decrypted = cipher.doFinal(cipherText);
-            String payload = new String(decrypted, StandardCharsets.UTF_8);
-            String[] parts = payload.split(":", 2);
-            if (parts.length != 2) {
-                return new TokenValidationResult(false, null, null);
-            }
-            LocalDateTime date = LocalDateTime.parse(parts[1]);
-            return new TokenValidationResult(true, parts[0], date);
-        } catch (DateTimeParseException ex) {
-            return new TokenValidationResult(false, null, null);
-        } catch (Exception ex) {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            LocalDateTime issuedAt = LocalDateTime.ofInstant(claims.getIssuedAt().toInstant(), ZoneId.systemDefault());
+            String login = claims.getSubject();
+            String profile = claims.get(CLAIM_PROFILE, String.class);
+            return new TokenValidationResult(true, profile, issuedAt, login);
+        } catch (JwtException | IllegalArgumentException ex) {
             return new TokenValidationResult(false, null, null);
         }
     }
@@ -77,11 +67,20 @@ public class TokenService {
         private final boolean valid;
         private final String profile;
         private final LocalDateTime date;
+        private final String login;
 
         public TokenValidationResult(boolean valid, String profile, LocalDateTime date) {
             this.valid = valid;
             this.profile = profile;
             this.date = date;
+            this.login = null;
+        }
+
+        public TokenValidationResult(boolean valid, String profile, LocalDateTime date, String login) {
+            this.valid = valid;
+            this.profile = profile;
+            this.date = date;
+            this.login = login;
         }
 
         public boolean isValid() {
@@ -94,6 +93,10 @@ public class TokenService {
 
         public LocalDateTime getDate() {
             return date;
+        }
+
+        public String getLogin() {
+            return login;
         }
     }
 }
