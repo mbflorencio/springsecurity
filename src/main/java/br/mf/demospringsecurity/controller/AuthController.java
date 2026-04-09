@@ -32,7 +32,6 @@ public class AuthController {
     @Operation(summary = "Login user")
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody AuthDto dto) {
-        System.out.println(dto.toString());
         Optional<User> user = service.login(dto.getLogin(), dto.getPassword());
         if (user.isPresent()) {
             String token = tokenService.generateToken(user.get());
@@ -43,8 +42,8 @@ public class AuthController {
 
     @Operation(summary = "Validate token")
     @PostMapping("/validate")
-    public ResponseEntity<TokenValidationResult> validate(@RequestBody String token) {
-        TokenValidationResult result = tokenService.validateToken(token);
+    public ResponseEntity<TokenValidationResult> validate(@RequestBody br.mf.demospringsecurity.dto.TokenDTO dto) {
+        TokenValidationResult result = tokenService.validateToken(dto != null ? dto.getToken() : null);
         if (result.isValid()) {
             return ResponseEntity.ok(result);
         }
