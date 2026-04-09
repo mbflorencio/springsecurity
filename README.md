@@ -4,7 +4,8 @@ Aplicação Spring Boot para gerenciamento de solicitações de usuários. O pro
 
 Principais tecnologias:
 
-- **Spring Boot 3**
+- **Java 21**
+- **Spring Boot 3.5.x**
 - **Spring Data JPA**
 - **Flyway** para versionamento do banco de dados
 - **H2** em memória para desenvolvimento
@@ -45,9 +46,34 @@ Rotas principais:
 
 Filtros opcionais podem ser passados como parâmetros de query (`userId` em `/requests`, `requestId` em `/products`).
 
+## Autenticação (JWT)
+
+O projeto usa autenticação **stateless** com JWT.
+
+Rotas públicas:
+- `POST /auth/login`
+- `POST /auth/validate`
+- Swagger (`/swagger-ui/**` e `/v3/api-docs/**`)
+
+Usuários iniciais (seed via Flyway):
+- **admin / secret** (perfil `ADMIN`)
+- **user / secret** (perfil `USER`)
+
+## Postman
+
+Existe uma coleção pronta para testes no arquivo `postman_collection.json` (na raiz do projeto).
+
+- Rode **Auth - Login (sets token)** para salvar o JWT automaticamente na variável `token`.
+- Os demais requests já enviam `Authorization: Bearer {{token}}`.
+
 ## Migrations e Banco de Dados
 
-O esquema é gerenciado pelo Flyway. As migrations criam as tabelas `users`, `requests` e `items` (produtos) e inserem dados de exemplo. Para ambiente de desenvolvimento, utiliza-se o banco H2 em memória. Em produção, basta definir o perfil `prod` para usar PostgreSQL.
+O esquema é gerenciado pelo Flyway. As migrations criam as tabelas `users`, `requests`, `product` e `requestproduct` e inserem dados iniciais de usuários.
+
+As migrations ficam em:
+- `src/main/resources/db/migration/common` (comum para H2 e PostgreSQL)
+- `src/main/resources/db/migration/h2` (específico para H2)
+- `src/main/resources/db/migration/postgresql` (específico para PostgreSQL)
 
 Arquivos de configuração relevantes:
 - `src/main/resources/application.properties` (H2)
@@ -67,7 +93,9 @@ Para rodar apontando para o PostgreSQL (perfil `prod`):
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-A documentação Swagger estará disponível em `http://localhost:8080/swagger-ui.html`.
+A aplicação sobe por padrão em `http://localhost:8085`.
+
+A documentação Swagger estará disponível em `http://localhost:8085/swagger-ui.html`.
 
 
 ## Testes

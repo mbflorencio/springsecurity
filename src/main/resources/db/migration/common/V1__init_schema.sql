@@ -32,3 +32,4 @@ CREATE TABLE requestproduct (
                                 CONSTRAINT fk_requestproduct_request FOREIGN KEY (requestid) REFERENCES requests(id),
                                 CONSTRAINT fk_requestproduct_product FOREIGN KEY (productid) REFERENCES product(id)
 );
+

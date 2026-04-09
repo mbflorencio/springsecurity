@@ -1,0 +1,361 @@
+{
+  "info": {
+    "name": "Requests Application (Spring Boot) - API Tests",
+    "description": "Coleção para testar autenticação (JWT) e CRUDs de Users/Requests/Products.\n\nComo usar:\n- Ajuste a variável `baseUrl` (padrão: http://localhost:8085)\n- Rode o request **Auth - Login** (ele salva o token em `token` automaticamente)\n- Rode os demais requests (já enviam Authorization Bearer)\n\nObservação:\n- O endpoint /auth/login retorna o token como texto puro.\n- O endpoint /auth/validate espera JSON: { \"token\": \"...\" }",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8085" },
+    { "key": "token", "value": "" },
+    { "key": "userId", "value": "1" },
+    { "key": "requestId", "value": "1" },
+    { "key": "productId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Auth - Login (sets token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "var t = pm.response.text();",
+                  "pm.environment.set('token', t);",
+                  "pm.collectionVariables.set('token', t);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"admin\",\n  \"password\": \"secret\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "auth", "login" ]
+            }
+          }
+        },
+        {
+          "name": "Auth - Validate token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/validate",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "auth", "validate" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Users - List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users" ]
+            }
+          }
+        },
+        {
+          "name": "Users - Get by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{userId}}" ]
+            }
+          }
+        },
+        {
+          "name": "Users - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Aluno\",\n  \"profile\": \"USER\",\n  \"login\": \"aluno1\",\n  \"password\": \"secret\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users" ]
+            }
+          }
+        },
+        {
+          "name": "Users - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{userId}},\n  \"name\": \"Aluno Atualizado\",\n  \"profile\": \"USER\",\n  \"login\": \"aluno1\",\n  \"password\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{userId}}" ]
+            }
+          }
+        },
+        {
+          "name": "Users - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "users", "{{userId}}" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Requests",
+      "item": [
+        {
+          "name": "Requests - List (all)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/requests",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "requests" ]
+            }
+          }
+        },
+        {
+          "name": "Requests - List (by userId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/requests?userId={{userId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "requests" ],
+              "query": [
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Requests - Get by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "requests", "{{requestId}}" ]
+            }
+          }
+        },
+        {
+          "name": "Requests - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestText\": \"Preciso de material de aula\",\n  \"requestDate\": \"2026-04-09T09:00:00\",\n  \"responseText\": null,\n  \"userId\": {{userId}},\n  \"items\": [\n    { \"productId\": {{productId}}, \"quantity\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "requests" ]
+            }
+          }
+        },
+        {
+          "name": "Requests - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{requestId}},\n  \"requestText\": \"Solicitação atualizada\",\n  \"requestDate\": \"2026-04-09T09:10:00\",\n  \"responseText\": \"Ok\",\n  \"userId\": {{userId}},\n  \"items\": [\n    { \"productId\": {{productId}}, \"quantity\": 2 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "requests", "{{requestId}}" ]
+            }
+          }
+        },
+        {
+          "name": "Requests - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "requests", "{{requestId}}" ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Products - List (all)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "products" ]
+            }
+          }
+        },
+        {
+          "name": "Products - List (by requestId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products?requestId={{requestId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "products" ],
+              "query": [
+                { "key": "requestId", "value": "{{requestId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Products - Get by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "products", "{{productId}}" ]
+            }
+          }
+        },
+        {
+          "name": "Products - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Notebook\",\n  \"description\": \"Notebook para o laboratório\",\n  \"quantity\": 10,\n  \"value\": 3500.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "products" ]
+            }
+          }
+        },
+        {
+          "name": "Products - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{productId}},\n  \"name\": \"Notebook Atualizado\",\n  \"description\": \"Notebook atualizado\",\n  \"quantity\": 12,\n  \"value\": 3600.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "products", "{{productId}}" ]
+            }
+          }
+        },
+        {
+          "name": "Products - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "products", "{{productId}}" ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

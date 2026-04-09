@@ -29,8 +29,8 @@ public class ProductController {
 
     @Operation(summary = "List all products")
     @GetMapping
-    public List<ProductDTO> list() {
-        List<Product> products = service.findAll();
+    public List<ProductDTO> list(@RequestParam(value = "requestId", required = false) Long requestId) {
+        List<Product> products = (requestId != null) ? service.findByRequestId(requestId) : service.findAll();
         return products.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());

@@ -21,24 +21,28 @@ class UserServiceTest {
     @Mock
     private UserRepository repository;
     @Mock
+    private PasswordEncoder passwordEncoder;
 
     private UserService service;
 
     @BeforeEach
     void setup() {
-        service = new UserService(repository);
+        service = new UserService(repository, passwordEncoder);
     }
 
     @Test
     void saveEncodesPassword() {
         User u = new User();
+        u.setLogin("john");
         u.setPassword("secret");
-                when(repository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.existsByLogin("john")).thenReturn(false);
+        when(passwordEncoder.encode("secret")).thenReturn("hashed");
+        when(repository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User result = service.save(u);
 
         assertEquals("hashed", result.getPassword());
-
+        verify(passwordEncoder).encode("secret");
         verify(repository).save(any(User.class));
     }
 
@@ -67,6 +71,7 @@ class UserServiceTest {
         User user = new User();
         user.setPassword("hash");
         when(repository.findByLogin("john")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
 
 
         Optional<User> result = service.login("john", "secret");
