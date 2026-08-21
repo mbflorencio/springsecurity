@@ -77,8 +77,7 @@ public class UserService {
         Optional<User> userOpt = repository.findByLogin(login);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            System.out.println(passwordEncoder.encode(rawPassword));
-            System.out.println(user.getPassword());
+
             if (passwordEncoder.matches(rawPassword, user.getPassword())) {
                 return Optional.of(user);
             }

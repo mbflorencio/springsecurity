@@ -32,11 +32,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenAuthenticationFilter tokenFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                // H2 Console usa iframe; o default X-Frame-Options: DENY bloqueia a tela
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login",
                                 "/auth/validate",
                                 "/swagger-ui.html",
+                                "/h2-console/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())

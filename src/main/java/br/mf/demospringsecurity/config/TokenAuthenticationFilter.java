@@ -27,27 +27,32 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         this.tokenService = tokenService;
     }
 
+    /**
+     * Rotas públicas: o filtro JWT nem roda (não exige Bearer).
+     * Inclui H2 Console (todas as subrotas: /h2-console, /h2-console/, /h2-console/login.do, etc.).
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return "/auth/login".equals(path)
+                || "/auth/validate".equals(path)
+                || path.startsWith("/h2-console")
+                || path.startsWith("/swagger-ui")
+                || "/swagger-ui.html".equals(path)
+                || path.startsWith("/v3/api-docs");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String path = request.getRequestURI();
-
-        if ("/auth/login".equals(path)
-                || "/auth/validate".equals(path)
-                || path.startsWith("/swagger-ui")
-                || "/swagger-ui.html".equals(path)
-                || path.startsWith("/v3/api-docs")) {
-            filterChain.doFilter(request, response);
-            logger.debug("Liberado Acesso sem Autenticação path:" + path);
-            return;
-        }
+        String path = request.getServletPath();
 
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             TokenValidationResult result = tokenService.validateToken(token);
             if (result.isValid()) {
-                logger.debug("Token  autorizado" + path);
+                logger.debug("Token autorizado path={}", path);
                 String role = result.getProfile() != null ? "ROLE_" + result.getProfile() : null;
                 List<SimpleGrantedAuthority> authorities = (role != null) ? List.of(new SimpleGrantedAuthority(role)) : List.of();
                 Authentication auth = new UsernamePasswordAuthenticationToken(result.getLogin(), null, authorities);
@@ -56,11 +61,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
                 filterChain.doFilter(request, response);
                 return;
-            }else{
-                logger.debug("Token nao autorizado" + path);
             }
-        }else{
-            logger.debug("Token nao localizado" + path);
+            logger.debug("Token nao autorizado path={}", path);
+        } else {
+            logger.debug("Token nao localizado path={}", path);
         }
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
