@@ -12,6 +12,12 @@ Principais tecnologias:
 - **PostgreSQL** para produção
 - **SpringDoc OpenAPI** para documentação interativa (Swagger)
 
+## Documentação (Spring Security)
+
+- **Alterações técnicas (lista do que foi feito):** [`docs/SPRING_SECURITY_ALTERACOES.md`](docs/SPRING_SECURITY_ALTERACOES.md) — inclui **sumário com links** para cada seção
+- **Material didático para PowerPoint (máximo de detalhe):** [`docs/MATERIAL_DIDATICO_SPRING_SECURITY_PPT.md`](docs/MATERIAL_DIDATICO_SPRING_SECURITY_PPT.md)
+- **Roteiro curto por blocos (slides para outra IA):** [`slides.md`](slides.md)
+
 ## Funcionalidades
 
 ### Usuários
